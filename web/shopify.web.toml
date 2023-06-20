@@ -1,0 +1,8 @@
+type="backend"
+
+auth_callback_path = ["/auth/install", "/auth/update"]
+webhooks_path = "/webhooks/shopify"
+
+[commands]
+dev = "mix phx.server"
+build = "mix compile"

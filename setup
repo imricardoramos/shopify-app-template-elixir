@@ -1,0 +1,46 @@
+#!/bin/bash
+
+set -e
+
+NEW_NAME="YourAppNameHerePascalCase"
+NEW_OTP="your_app_name_here_snake_case"
+
+CURRENT_NAME="MyApp"
+CURRENT_OTP="my_app"
+
+mv web/lib/$CURRENT_OTP web/lib/$NEW_OTP
+mv web/lib/$CURRENT_OTP.ex web/lib/$NEW_OTP.ex
+mv web/lib/${CURRENT_OTP}_web web/lib/${NEW_OTP}_web
+mv web/lib/${CURRENT_OTP}_web.ex web/lib/${NEW_OTP}_web.ex
+
+ack -l $CURRENT_NAME --ignore-file=is:rename | xargs sed -i '' -e "s/$CURRENT_NAME/$NEW_NAME/g"
+ack -l $CURRENT_OTP --ignore-file=is:rename | xargs sed -i '' -e "s/$CURRENT_OTP/$NEW_OTP/g"
+
+echo "[$(date +"%T")] App name changed to $NEW_NAME ($NEW_OTP)"
+
+git submodule init
+git submodule update
+
+rm -rf .github
+rm -rf .git
+rm .gitmodules
+rm -rf web/frontend/.github
+rm web/frontend/.git*
+sed -i '' '/package-lock.json/d' .gitignore
+sed -i '' '/mix.lock/d' .gitignore
+
+echo "[$(date +"%T")] Removed all previous git folders/files"
+
+echo "[$(date +"%T")] Installing dependencies"
+npm install
+cd web/
+mix deps.get
+mix compile
+echo "[$(date +"%T")] Dependencies Installed"
+echo "[$(date +"%T")] Creating database"
+mix ecto.setup
+echo "[$(date +"%T")] Database created"
+cd ..
+echo "Next steps:"
+echo "  - Add \`\"^/auth(/|(\\\\?.*)?\$)\": proxyOptions\` to your \`vite.config.js\` file"
+echo "  - Run \`npm run dev\` to start your app!"
